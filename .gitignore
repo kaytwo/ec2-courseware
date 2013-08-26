@@ -1,4 +1,5 @@
 *.py[cod]
+id_aws
 
 # C extensions
 *.so
