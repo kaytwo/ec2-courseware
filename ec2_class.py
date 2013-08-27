@@ -4,17 +4,24 @@ import boto
 from optparse import OptionParser
 import sys
 from time import sleep,time
+from subprocess import Popen, PIPE
+from tempfile import mkdtemp
+from shutil import rmtree
+import shlex
+
 
 iam = boto.connect_iam()
 ec2 = boto.connect_ec2()
 cloudwatch = boto.connect_cloudwatch()
 
+# class specific variables
 CLASS = 'cs450'
 SEMESTER = 'f13'
-
 AMI = 'ami-d0f89fb9' # for now, standard ubuntu 12.04.2 LTS
-
 ACCOUNT = '020404094600'
+SAFE = True # in case of errors, bomb out instead of wiping old
+
+
 
 policy_boilerplate = '''
 {
@@ -39,6 +46,25 @@ aws_secret_access_key = %s
 '''
 
 '''
+create keyfiles locally
+'''
+
+def create_local_keypair(username):
+  mydir = mkdtemp()
+  args = shlex.split('ssh-keygen -t rsa -N "" -f %s/prefix -C %s' % (mydir,username))
+  print ' '.join(args)
+  p = Popen(args, stdout=PIPE)
+  stdout = p.communicate()[0]
+  if p.returncode != 0:
+    raise Exception("could not create ssh key")
+  public_key = open(mydir + '/prefix.pub').read()
+  private_key = open(mydir + '/prefix').read()
+  rmtree(mydir)
+  return public_key, private_key
+
+
+
+'''
 Retrieve-or-create methods
 '''
 
@@ -58,20 +84,37 @@ def create_user(username):
   else:
     return thisuser[0]
 
-def create_key_pair(username):
+def create_key_pair_remote(username):
   allkeys = ec2.get_all_key_pairs()
   thisuser = [x for x in allkeys if x.name == username]
   if len(thisuser) == 1:
+    if SAFE:
+      raise SystemExit("user already has an ssh key")
     print "ALERT: user already has ssh key. Deleting old key and regenerating."
     print ec2.delete_key_pair(username)
   ssh_key = ec2.create_key_pair(username)
   return ssh_key
+
+def create_key_pair(username):
+  allkeys = ec2.get_all_key_pairs()
+  thisuser = [x for x in allkeys if x.name == username]
+  if len(thisuser) == 1:
+    if SAFE:
+      raise SystemExit("user already has an ssh key")
+    print "ALERT: user already has ssh key. Deleting old key and regenerating."
+    print ec2.delete_key_pair(username)
+  pubkey,privkey = create_local_keypair(username)
+  ssh_key = ec2.import_key_pair(username,pubkey)
+  return pubkey,privkey
+
 
 def create_access_key(student_id):
   allkeys = iam.get_all_access_keys(student_id).list_access_keys_response.list_access_keys_result.access_key_metadata
   if len(allkeys) != 0:
     print allkeys
     print "ALERT: user already has access key(s). Deleting old keys and regenerating."
+    if SAFE:
+      raise SystemExit("user already has an ssh key")
     for key in allkeys:
       iam.delete_access_key(key.access_key_id,user_name=student_id)
   return iam.create_access_key(student_id)
@@ -111,14 +154,13 @@ def create_class(classlist):
     access_key = response.access_key_id
     secret_key = response.secret_access_key
     # create student ssh keypair
-    ssh_key = create_key_pair(student_id)
-    private_key = ssh_key.material
+    public_key,private_key = create_key_pair(student_id)
 
     # create VM
     reservation = ec2.run_instances(AMI,
                       instance_type='t1.micro',
                       security_groups=(group.name,),
-                      key_name=ssh_key.name
+                      key_name=student_id
                       )
     print "instance run:",repr(reservation.instances[0])
     instance = reservation.instances[0]
@@ -141,7 +183,7 @@ def create_class(classlist):
     with os.fdopen(os.open('id_aws', os.O_WRONLY | os.O_CREAT, 0600), 'w') as handle:
       handle.write(private_key)
 
-    with os.fdopen(os.open(student.'.boto', os.O_WRONLY | os.O_CREAT, 0600), 'w') as handle:
+    with os.fdopen(os.open(student,'.boto', os.O_WRONLY | os.O_CREAT, 0600), 'w') as handle:
       handle.write(config_boilerplate % (access_key,secret_key))
 
     instance_id_file = open('my_vm_id','w')
@@ -181,6 +223,10 @@ def start_vm(vm_id):
   return False
  
 
-start_student_vm()
+public,private = create_local_keypair('ckanich')
+print public
+print private
+
+# start_student_vm()
 
 # create_class(['ckanich-testing',])
