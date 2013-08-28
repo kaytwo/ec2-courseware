@@ -135,8 +135,8 @@ class Student:
     return "%s %s <%s>" % (self.firstname, self.lastname, self.email)
 
   def send_mail(self):
-    assert hasattr(self,'privatekey')
-    files = {'id_rsa':self.privatekey}
+    assert hasattr(self,'private_key')
+    files = {'id_rsa':self.private_key}
     send_mail(INSTRUCTOR,self.emailto(),CC_ADDR,"Your CS450 VM credentials",email_text % (self.student_id,self.pw),files)
 
 
