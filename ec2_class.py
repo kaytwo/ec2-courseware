@@ -152,6 +152,15 @@ def create_security_group(name):
   else:
     return thisgroup[0]
 
+def user_exists(username):
+  everybody = iam.get_all_users().list_users_response.list_users_result.users
+  thisuser = [x for x in everybody if x.user_name == username]
+  if len(thisuser) == 0:
+    return False
+  else:
+    return True
+
+
 def create_user(username):
   everybody = iam.get_all_users().list_users_response.list_users_result.users
   thisuser = [x for x in everybody if x.user_name == username]
@@ -214,7 +223,10 @@ def wait_for_instance(instance_id,timeout=5*60,retry=5):
 
 def create_class(classlist):
   keydir = "%s-%s" % (CLASS,SEMESTER)
-  os.mkdir(keydir)
+  try:
+    os.mkdir(keydir)
+  except:
+    pass
   students = []
   group = create_security_group("%s.%s" % (CLASS, SEMESTER))
   previous_rules = [str(x) for x in group.rules]
@@ -228,6 +240,9 @@ def create_class(classlist):
     student_id = '%s.%s.%s' % (CLASS,SEMESTER,student.username)
     student.student_id = student_id
     # create student
+    if user_exists(student_id):
+      print "student %s already exists" % student_id
+      continue
     response = create_user(student_id)
     pw = generate_password()
     student.pw = pw
