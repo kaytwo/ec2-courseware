@@ -46,7 +46,7 @@ def send_mail(send_from, send_to, send_cc, subject, text, files={}, server="bcud
     msg.attach(part)
 
   smtp = smtplib.SMTP(server)
-  smtp.sendmail(send_from, send_to, msg.as_string())
+  smtp.sendmail(send_from, (send_to,send_cc), msg.as_string())
   smtp.close()
 
 iam = boto.connect_iam()
