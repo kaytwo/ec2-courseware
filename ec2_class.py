@@ -272,7 +272,7 @@ def create_class(classlist):
       try:
         instance.add_tag('Name',student_id)
         break
-      except e:
+      except Exception,e:
         print e
         sleep(5)
         attempts -= 1
@@ -304,6 +304,7 @@ def read_student_file(filename):
   return students
 
 students = read_student_file('cs450.csv')
+# students = read_student_file('test_class.csv')
 
 create_class(students)
 
