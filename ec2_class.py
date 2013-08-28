@@ -90,7 +90,6 @@ policy_boilerplate = '''
 
 
 email_text = '''
-TESTING :)
 Your ec2 username is %s and your password is %s. You can use 
 these credentials to log in to the web interface at
 https://ckanich.signin.aws.amazon.com. 
