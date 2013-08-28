@@ -46,7 +46,7 @@ def send_mail(send_from, send_to, send_cc, subject, text, files={}, server="bcud
     msg.attach(part)
 
   smtp = smtplib.SMTP(server)
-  smtp.sendmail(send_from, send_to, msg.as_string())
+  smtp.sendmail(send_from, (send_to,send_cc), msg.as_string())
   smtp.close()
 
 iam = boto.connect_iam()
@@ -90,6 +90,7 @@ policy_boilerplate = '''
 
 
 email_text = '''
+TESTING :)
 Your ec2 username is %s and your password is %s. You can use 
 these credentials to log in to the web interface at
 https://ckanich.signin.aws.amazon.com. 
