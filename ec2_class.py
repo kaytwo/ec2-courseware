@@ -59,6 +59,9 @@ SEMESTER = 'f13'
 AMI = 'ami-d0f89fb9' # for now, standard ubuntu 12.04.2 LTS
 ACCOUNT = '020404094600'
 SAFE = True # in case of errors, bomb out instead of wiping old
+LOGIN_URL = "https://ckanich.signin.aws.amazon.com/console"
+# find this at https://console.aws.amazon.com/iam/home#home
+
 
 INSTRUCTOR = 'Chris Kanich <ckanich@uicbits.net>' # from address
 # when sending email to @uic.edu, the smtp server will reject @uic.edu from
@@ -96,7 +99,8 @@ policy_boilerplate = '''
 email_text = '''
 Your ec2 username is %s and your password is %s. You can use 
 these credentials to log in to the web interface at
-https://ckanich.signin.aws.amazon.com. 
+%s.
+. 
 
 To start your VM:
 
@@ -140,7 +144,7 @@ class Student:
   def send_mail(self):
     assert hasattr(self,'private_key')
     files = {'id_rsa':self.private_key}
-    send_mail(INSTRUCTOR,self.emailto(),CC_ADDR,"Your CS450 VM credentials",email_text % (self.student_id,self.pw),files)
+    send_mail(INSTRUCTOR,self.emailto(),CC_ADDR,"Your %s VM credentials" % CLASS,email_text % (self.student_id,self.pw,LOGIN_URL),files)
 
 
 
@@ -308,7 +312,7 @@ def read_student_file(filename):
   return students
 
 # students = read_student_file('cs450.csv')
-students = read_student_file('test_class.csv')
+students = read_student_file(sys.argv[1])
 
 create_class(students)
 
