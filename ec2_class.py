@@ -59,7 +59,11 @@ SEMESTER = 'f13'
 AMI = 'ami-d0f89fb9' # for now, standard ubuntu 12.04.2 LTS
 ACCOUNT = '020404094600'
 SAFE = True # in case of errors, bomb out instead of wiping old
+
 INSTRUCTOR = 'Chris Kanich <ckanich@uicbits.net>' # from address
+# when sending email to @uic.edu, the smtp server will reject @uic.edu from
+# addr's if you don't auth, that's why I used this alternate address.
+
 
 CC_ADDR = 'Chris Kanich <ckanich@uic.edu>'
 
@@ -303,8 +307,8 @@ def read_student_file(filename):
       students.append(Student(item))
   return students
 
-students = read_student_file('cs450.csv')
-# students = read_student_file('test_class.csv')
+# students = read_student_file('cs450.csv')
+students = read_student_file('test_class.csv')
 
 create_class(students)
 
