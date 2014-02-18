@@ -54,11 +54,21 @@ ec2 = boto.connect_ec2()
 cloudwatch = boto.connect_cloudwatch()
 
 # class specific variables
-CLASS = 'cs450'
-SEMESTER = 'f13'
-AMI = 'ami-d0f89fb9' # for now, standard ubuntu 12.04.2 LTS
-ACCOUNT = '020404094600'
+CLASS = 'cs594'
+SEMESTER = 's14'
+# AMI = 'ami-d0f89fb9' # for now, standard ubuntu 12.04.2 LTS
+AMI = 'ami-ad184ac4' # ubuntu 13.10, new hotness
+ACCOUNT = '020404094600' # ckanich
 SAFE = True # in case of errors, bomb out instead of wiping old
+# instance_size = "m1.small"
+instance_size = "c3.2xlarge"
+# root_size = 8
+root_size = 64
+
+# iip_arn = None
+iip_arn = 'arn:aws:iam::020404094600:instance-profile/read-all-s3-buckets'
+
+
 LOGIN_URL = "https://ckanich.signin.aws.amazon.com/console"
 # find this at https://console.aws.amazon.com/iam/home#home
 
@@ -267,11 +277,21 @@ def create_class(classlist):
     with open(keydir + '/' + student.username + '.pub','w') as f:
       f.write(public_key)
 
+    if root_size != 8:
+      dev_sda1 = boto.ec2.blockdevicemapping.EBSBlockDeviceType()
+      dev_sda1.size = root_size # size in Gigabytes
+      bdm = boto.ec2.blockdevicemapping.BlockDeviceMapping()
+      bdm['/dev/sda1'] = dev_sda1
+    else:
+      bdm = None
+
     # create VM
     reservation = ec2.run_instances(AMI,
-                      instance_type='m1.small',
+                      instance_type=instance_size,
                       security_groups=(group.name,),
-                      key_name=student_id
+                      key_name=student_id,
+                      block_device_map=bdm,
+                      instance_profile_arn=iip_arn
                       )
     print "instance run:",repr(reservation.instances[0])
     instance = reservation.instances[0]
