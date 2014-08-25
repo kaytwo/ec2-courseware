@@ -54,19 +54,17 @@ ec2 = boto.connect_ec2()
 cloudwatch = boto.connect_cloudwatch()
 
 # class specific variables
-CLASS = 'cs594'
-SEMESTER = 's14'
+CLASS = 'cs450'
+SEMESTER = 'f14'
 # AMI = 'ami-d0f89fb9' # for now, standard ubuntu 12.04.2 LTS
-AMI = 'ami-ad184ac4' # ubuntu 13.10, new hotness
+AMI = 'ami-864d84ee' # ubuntu 14.04 lts (hvm)
 ACCOUNT = '020404094600' # ckanich
 SAFE = True # in case of errors, bomb out instead of wiping old
-# instance_size = "m1.small"
-instance_size = "c3.2xlarge"
-# root_size = 8
-root_size = 64
+instance_size = "m3.medium"
+root_size = 8
 
-# iip_arn = None
-iip_arn = 'arn:aws:iam::020404094600:instance-profile/read-all-s3-buckets'
+iip_arn = None
+# iip_arn = 'arn:aws:iam::020404094600:instance-profile/read-all-s3-buckets'
 
 
 LOGIN_URL = "https://ckanich.signin.aws.amazon.com/console"
@@ -149,7 +147,7 @@ class Student:
     self.username = self.email.split('@')[0]
 
   def emailto(self):
-    return "%s %s <%s>" % (self.firstname, self.lastname, self.email)
+    return "%s %s <%s>" % (self.name, self.email)
 
   def send_mail(self):
     assert hasattr(self,'private_key')

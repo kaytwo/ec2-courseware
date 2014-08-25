@@ -1,20 +1,22 @@
 allstudents = []
 
-for line in open('classlist.temp').readlines():
+for line in open('uin-email-name.csv').readlines():
   u = line.strip()
-  allstudents.append(u)
+  uin,emailaddr,name = u.split(',')
+  username = emailaddr.split('@')[0]
+  allstudents.append(username)
 
-print "\n# BEGIN cs450-f13"
-print "@cs450-f13-ta = xiang"
-print "@cs450-f13-students = " + ' '.join(allstudents) + '\n'
+print "\n# BEGIN cs450-f14"
+print "@cs450-f14-ta = igupta5"
+print "@cs450-f14-students = " + ' '.join(allstudents) + '\n'
 
-print "repo cs450-f13/public"
-print "  R = @cs450-f13-students"
-print "  RW+ = ckanich @cs450-f13-ta\n"
+print "repo cs450-f14/public"
+print "  R = @cs450-f14-students"
+print "  RW+ = ckanich @cs450-f14-ta\n"
 
 for u in allstudents:
-  print "repo cs450-f13/%s" % u
+  print "repo cs450-f14/%s" % u
   print "  RW = %s" % u
-  print "  RW+ = @directors @cs450-f13-ta\n"
+  print "  RW+ = @directors @cs450-f14-ta\n"
 
-print "# END cs450-f13"
+print "# END cs450-f14"
