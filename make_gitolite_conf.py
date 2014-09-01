@@ -1,6 +1,8 @@
+import sys
+
 allstudents = []
 
-for line in open('uin-email-name.csv').readlines():
+for line in open(sys.argv[1]).readlines():
   u = line.strip()
   uin,emailaddr,name = u.split(',')
   username = emailaddr.split('@')[0]

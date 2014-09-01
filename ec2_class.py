@@ -147,7 +147,7 @@ class Student:
     self.username = self.email.split('@')[0]
 
   def emailto(self):
-    return "%s %s <%s>" % (self.name, self.email)
+    return "%s <%s>" % (self.name, self.email)
 
   def send_mail(self):
     assert hasattr(self,'private_key')
