@@ -154,6 +154,8 @@ class Student:
     files = {'id_rsa':self.private_key}
     send_mail(INSTRUCTOR,self.emailto(),CC_ADDR,"Your %s VM credentials" % CLASS,email_text % (self.student_id,self.pw,LOGIN_URL),files)
 
+  def send_access_keys(self,mailtext):
+    send_mail(INSTRUCTOR,self.emailto(),CC_ADDR,"Your %s VM access keys" % CLASS,mailtext)
 
 
 '''
@@ -319,7 +321,18 @@ def create_class(classlist):
     
     student.send_mail()
 
+def create_access_keys(students):
+  for student in students:
+    student_id = '%s.%s.%s' % (CLASS,SEMESTER,student.username)
+    student.student_id = student_id
 
+    response = create_access_key(student_id)
+    access_key = response.access_key_id
+    secret_key = response.secret_access_key
+
+    # student.send_access_keys(
+    print "Your key id is %s and your access key is %s. To use the start_my_vm.py script, you will need to make sure you have the python boto package installed locally. On debian descendants, boto is available via 'apt-get install python-boto'.\n\nSave the dotboto.boilerplate file from the public git into your home directory as '.boto' and replace the necessary GOES_HERE variables in that file, including your instance ID (this starts with 'i-' and is available through the web interface).\n\nYou should then be able to use the start_my_vm.py script from your local host to start your virtual machine; that script should output your public DNS name if it completes successfully so you can log in to your VM."% (access_key,secret_key)# )
+    sys.exit()
 
 
 def read_student_file(filename):
@@ -332,7 +345,11 @@ def read_student_file(filename):
 # students = read_student_file('cs450.csv')
 students = read_student_file(sys.argv[1])
 
-create_class(students)
+create_access_keys(students)
+
+# create_class(students)
+
+
 
 # wait_for_instance(boto.config.get_value('Custom','my_vm'))
 
