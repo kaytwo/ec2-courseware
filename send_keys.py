@@ -53,6 +53,8 @@ def send_mail(send_from, send_to, send_cc, subject, text, files={}, server="bcud
 # class specific variables
 CLASS = 'cs450'
 SEMESTER = 'f15'
+SERVER = 'git.uicbits.net'
+GITOLITE_USER = 'git'
 # AMI = 'ami-d0f89fb9' # for now, standard ubuntu 12.04.2 LTS
 AMI = 'ami-864d84ee' # ubuntu 14.04 lts (hvm)
 ACCOUNT = '020404094600' # ckanich
@@ -77,44 +79,23 @@ CC_ADDR = 'Chris Kanich <ckanich@uic.edu>'
 
 SAFE = False
 
-policy_boilerplate = '''
-{
-   "Version": "2012-10-17",
-   "Statement": [{
-      "Effect": "Allow",
-      "Action": [
-        "ec2:StopInstances", 
-        "ec2:StartInstances"
-      ],
-      "Resource": "arn:aws:ec2:us-east-1:%s:instance/%s"
-    }
-   ],
-   "Statement": [{
-      "Effect": "Allow",
-      "Action": [
-        "ec2:DescribeInstance*"
-      ],
-      "Resource": "*"
-    }
-   ]
-}
-'''
-
 
 email_text = '''
 id_rsa (attached to this email) is your ssh private key. To use it by default
 in a *nix environment, place it in ~/.ssh/ and make sure that it is unreadable
 by group or other.
 
-Using your private key, everyone in class can check out the class public repository using the command line:
+Using your private key, everyone in class has read access to the public repository. If you would like to check the code out by itself, you can do so at:
 
-git clone git@git.uicbits.net:cs450-f15/public.git
+git clone {user}@{server}:{class}-{semester}/public.git
+
+This will make a subdirectory called "public" with the current version of the all published skeleton code for the class.
 
 You can use 'git pull' within the public directory to check out any updates. Note that if you change files in this directory, you might confuse git pull, so don't change files in this directory - change them within your personal directory.
 
 You can also checkout your personal repository like so:
 
-git clone git@git.uicbits.net:cs450-f15/%s.git
+git clone {user}@{server}:{classname}-{semester}/{netid}.git
 
 Only you and the course admins can make updates to that repository. You will turn in your code by pushing updates to this repository.
 
@@ -144,7 +125,7 @@ class Student:
   def send_mail(self):
     assert hasattr(self,'private_key')
     files = {'id_rsa':self.private_key}
-    send_mail(INSTRUCTOR,self.emailto(),CC_ADDR,"Your %s VM credentials" % CLASS,email_text % (self.username),files)
+    send_mail(INSTRUCTOR,self.emailto(),CC_ADDR,"Your %s VM credentials" % CLASS,email_text.format(user=GITOLITE_USER,server=SERVER,classname=CLASS,semester=SEMESTER,netid=self.username),files)
 
 
 def create_key_pair(username):
