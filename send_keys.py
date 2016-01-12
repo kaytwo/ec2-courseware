@@ -58,26 +58,14 @@ GITOLITE_USER = 'git'
 # AMI = 'ami-d0f89fb9' # for now, standard ubuntu 12.04.2 LTS
 AMI = 'ami-864d84ee' # ubuntu 14.04 lts (hvm)
 ACCOUNT = '020404094600' # ckanich
-SAFE = True # in case of errors, bomb out instead of wiping old
-instance_size = "m3.medium"
-root_size = 8
-
-iip_arn = None
-# iip_arn = 'arn:aws:iam::020404094600:instance-profile/read-all-s3-buckets'
+CC_ADDR = 'Chris Kanich <ckanich@uic.edu>'
+REPLYTO = CC_ADDR
 
 
-LOGIN_URL = "https://ckanich.signin.aws.amazon.com/console"
-# find this at https://console.aws.amazon.com/iam/home#home
-
-
-INSTRUCTOR = 'Chris Kanich <ckanich@uicbits.net>' # from address
+SEND_FROM_ADDR = 'Chris Kanich <ckanich@uicbits.net>' # from address
 # when sending email to @uic.edu, the smtp server will reject @uic.edu from
 # addr's if you don't auth, that's why I used this alternate address.
 
-
-CC_ADDR = 'Chris Kanich <ckanich@uic.edu>'
-
-SAFE = False
 
 
 email_text = '''
@@ -125,7 +113,7 @@ class Student:
   def send_mail(self):
     assert hasattr(self,'private_key')
     files = {'id_rsa':self.private_key}
-    send_mail(INSTRUCTOR,self.emailto(),CC_ADDR,"Your %s VM credentials" % CLASS,email_text.format(user=GITOLITE_USER,server=SERVER,classname=CLASS,semester=SEMESTER,netid=self.username),files)
+    send_mail(SEND_FROM_ADDR,self.emailto(),CC_ADDR,"Your %s VM credentials" % CLASS,email_text.format(user=GITOLITE_USER,server=SERVER,classname=CLASS,semester=SEMESTER,netid=self.username),files)
 
 
 def create_key_pair(username):
