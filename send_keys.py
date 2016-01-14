@@ -34,6 +34,7 @@ email_text = '''
 
 You can use the Microsoft Azure cloud platform to deploy your class virtual machine. You can redeem this code at http://www.microsoftazurepass.com/
 
+Your promo code is:
 {azure_code}
 
 Check the course web page for more instructions on creating and connecting to your VM.
