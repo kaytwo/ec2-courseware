@@ -1,16 +1,12 @@
 #!/usr/bin/env python
+from __future__ import print_function
 
-import boto
-import csv
-from optparse import OptionParser
+from getpass import getpass
 import sys
-from time import sleep,time
 from subprocess import Popen, PIPE
 from tempfile import mkdtemp
 from shutil import rmtree
 import shlex
-from random import choice
-import string
 
 import smtplib
 import os
@@ -20,13 +16,53 @@ from email.MIMEText import MIMEText
 from email.Utils import COMMASPACE, formatdate
 from email import Encoders
 
+# class specific variables
+CLASS = 'cs361'
+SEMESTER = 's16'
+TA_NETIDS = 'schowd6 zshi22'
+CC_ADDR = 'Chris Kanich <ckanich@uic.edu>'
+INSTRUCTOR_NETID = "ckanich"
+SERVER = 'git.uicbits.net'
+GITOLITE_USER = 'git'
 
-passwordcharacters = string.letters + string.digits
-def generate_password(length=8):
-  return ''.join(choice(passwordcharacters) for _ in xrange(length))
-  
+SEND_FROM_ADDR = CC_ADDR
 
-def send_mail(send_from, send_to, send_cc, subject, text, files={}, server="bcuda-east.cc.uic.edu."):
+CLASSID = "%s-%s" % (CLASS,SEMESTER)
+
+
+email_text = '''
+id_rsa (attached to this email) is your ssh private key. To use it by default
+in a *nix environment, place it in ~/.ssh/ and make sure that it is unreadable
+by group or other.
+
+Using your private key, everyone in class has read access to the public repository. If you would like to check the code out by itself, you can do so at:
+
+git clone {user}@{server}:{classid}/public.git
+
+This will make a subdirectory called "public" with the current version of all published skeleton code for the class.
+
+You can use 'git pull' within the public directory to check out any updates. Note that if you change files in this directory, you might confuse git pull, so don't change files in this directory - change them within your personal directory.
+
+You can also checkout your personal repository like so:
+
+git clone {user}@{server}:{classid}/{netid}.git
+
+Only you and the course admins can read or make updates to that repository. You will turn in your code by pushing updates to this repository.
+
+
+You can also use the Microsoft Azure cloud platform to deploy your class virtual machine. You can redeem this code at http://www.microsoftazurepass.com/
+
+{azure_code}
+
+Check the course web page for more instructions on creating and connecting to your VM.
+
+'''
+
+ 
+mail_username = raw_input("enter your uic netid:")
+mail_password = getpass()
+
+def send_mail(send_from, send_to, send_cc, subject, text, files={}, server="mail.uic.edu."):
   assert type(files)==dict
 
   msg = MIMEMultipart()
@@ -46,55 +82,18 @@ def send_mail(send_from, send_to, send_cc, subject, text, files={}, server="bcud
     msg.attach(part)
 
   smtp = smtplib.SMTP(server)
+  smtp.starttls()
+  smtp.login(mail_username,mail_password)
+  # smtp.set_debuglevel(True)
   smtp.sendmail(send_from, (send_to,send_cc), msg.as_string())
   smtp.close()
 
 
-# class specific variables
-CLASS = 'cs361'
-SEMESTER = 's16'
-SERVER = 'git.uicbits.net'
-GITOLITE_USER = 'git'
-CC_ADDR = 'Chris Kanich <ckanich@uic.edu>'
-REPLYTO = CC_ADDR
-
-
-SEND_FROM_ADDR = 'Chris Kanich <ckanich@uicbits.net>' # from address
-# when sending email to @uic.edu, the smtp server will reject @uic.edu from
-# addr's if you don't auth, that's why I used this alternate address.
-
-
-
-email_text = '''
-id_rsa (attached to this email) is your ssh private key. To use it by default
-in a *nix environment, place it in ~/.ssh/ and make sure that it is unreadable
-by group or other.
-
-Using your private key, everyone in class has read access to the public repository. If you would like to check the code out by itself, you can do so at:
-
-git clone {user}@{server}:{classname}-{semester}/public.git
-
-This will make a subdirectory called "public" with the current version of the all published skeleton code for the class.
-
-You can use 'git pull' within the public directory to check out any updates. Note that if you change files in this directory, you might confuse git pull, so don't change files in this directory - change them within your personal directory.
-
-You can also checkout your personal repository like so:
-
-git clone {user}@{server}:{classname}-{semester}/{netid}.git
-
-Only you and the course admins can read or make updates to that repository. You will turn in your code by pushing updates to this repository.
-
-
-You can also use the Microsoft Azure cloud platform to deploy your class virtual machine. You can redeem this code at http://www.microsoftazurepass.com/
-
-{azure_code}
-
-'''
 
 def create_local_keypair(username):
   mydir = mkdtemp()
   args = shlex.split('ssh-keygen -t rsa -N "" -f %s/prefix -C %s' % (mydir,username))
-  print ' '.join(args)
+  print(' '.join(args))
   p = Popen(args, stdout=PIPE)
   stdout = p.communicate()[0]
   if p.returncode != 0:
@@ -121,7 +120,7 @@ class Student:
   def send_mail(self):
     assert hasattr(self,'private_key')
     files = {'id_rsa':self.private_key}
-    send_mail(SEND_FROM_ADDR,self.emailto(),CC_ADDR,"Your %s ssh credentials" % CLASS,email_text.format(user=GITOLITE_USER,server=SERVER,classname=CLASS,semester=SEMESTER,netid=self.username,azure_code=self.azure_code),files)
+    send_mail(SEND_FROM_ADDR,self.emailto(),CC_ADDR,"Your %s ssh credentials" % CLASS,email_text.format(user=GITOLITE_USER,server=SERVER,classid=CLASSID,netid=self.username,azure_code=self.azure_code),files)
 
 
 def create_key_pair(username):
@@ -130,7 +129,7 @@ def create_key_pair(username):
 
 
 def create_class(classlist,codes):
-  keydir = "%s-%s" % (CLASS,SEMESTER)
+  keydir = CLASSID 
   try:
     os.mkdir(keydir)
   except:
@@ -138,7 +137,7 @@ def create_class(classlist,codes):
   students = []
 
   for student in classlist:
-    student_id = '%s.%s.%s' % (CLASS,SEMESTER,student.username)
+    student_id = '%s-%s' % (CLASSID,student.username)
     student.student_id = student_id
     student.azure_code = codes.pop()
     # create student ssh keypair
@@ -147,9 +146,6 @@ def create_class(classlist,codes):
     student.private_key = private_key
     with open(keydir + '/' + student.username + '.pub','w') as f:
       f.write(public_key)
-
-
-   
     student.send_mail()
 
 
@@ -180,8 +176,23 @@ def dump_azure_file(filename, codes):
     for k in codes:
       f.write("%s\n" % k)
 
+def create_gitolite_conf(students):
+  allstudents = ' '.join([x.username for x in students])
+  with open("%s.conf" % CLASSID,'w') as f:
+    print("\n# BEGIN %s" % (CLASSID),file=f)
+    print("@%s-ta = %s" % (CLASSID,TA_NETIDS),file=f)
+    print("@%s-students = %s\n"%(CLASSID, allstudents) ,file=f)
 
+    print("repo %s/public" % CLASSID,file=f)
+    print("  R = @%s-students" % CLASSID,file=f)
+    print("  RW+ = %s @%s-ta\n" % (INSTRUCTOR_NETID,CLASSID),file=f)
 
+    for u in allstudents.split():
+      print("repo %s/%s" % (CLASSID,u),file=f)
+      print("  RW = %s" % u,file=f)
+      print("  RW+ = %s @%s-ta\n" % (INSTRUCTOR_NETID,CLASSID),file=f)
+
+    print("# END %s" % CLASSID,file=f)
 
 
 
@@ -197,4 +208,5 @@ create_class(students, codes)
 
 dump_azure_file(sys.argv[2],codes)
 
+create_gitolite_conf(students)
 
