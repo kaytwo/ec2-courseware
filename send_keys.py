@@ -189,7 +189,7 @@ def create_gitolite_conf(students):
 
     for u in allstudents.split():
       print("repo %s/%s" % (CLASSID,u),file=f)
-      print("  RW = %s" % u,file=f)
+      print("  RW+ = %s" % u,file=f)
       print("  RW+ = %s @%s-ta\n" % (INSTRUCTOR_NETID,CLASSID),file=f)
 
     print("# END %s" % CLASSID,file=f)
