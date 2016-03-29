@@ -44,17 +44,17 @@ for netid in netids:
   stdo,stde = run(["git","fetch","--all","--tags"])
   if 'fatal' in stde:
     print("error fetching all remote crap:\n{}".format(stde))
+    os.chdir("..")
     continue
   stdo,stde = run(["git","checkout",hw_tagname])
   if "error: pathspec '{}' did not match".format(hw_tagname) in stde:
     print("{} did not tag correctly.".format(netid))
-    continue
   elif 'error' in stde:
     print("some error:\n{}".format(stde))
+    os.chdir("..")
     continue
   # else:
   #   print("{} tagged {}.".format(netid,hw_tagname))
-
   stdo,stde = run(["git","tag","-s",hw_tagname + "_" + tag_suffix,'-m','signed turnin commit'])
   if stdo == '' and stde == '':
     stdo,stde = run(["git","push","--tags"])
